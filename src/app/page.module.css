@@ -3,7 +3,7 @@
 :root {
   --foreground: #000;
   --background: #929292;
-  --header: #00796b;
+  --header: #00d8bf;
 }
 
 .page {
@@ -47,6 +47,7 @@
   margin: 0;
   font-size: 18px;
   color: #333;
+  text-align: center;
 }
 
 .taskList {
