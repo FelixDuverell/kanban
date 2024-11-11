@@ -1,4 +1,4 @@
-// src/app/components/KanbanCards.tsx
+// src/app/page.tsx
 
 "use client";
 // src/app/components/KanbanCards.tsx
