@@ -18,10 +18,10 @@ interface Card {
 
 export default function KanbanCards() {
     const initialCards: Card[] = [
-        { title: 'To Do', tasks: [{ id: 1, title: 'Task 1' }, { id: 2, title: 'Task 2' }] },
-        { title: 'In Progress', tasks: [{ id: 3, title: 'Task 3' }] },
-        { title: 'Review', tasks: [{ id: 4, title: 'Task 4' }] },
-        { title: 'Done', tasks: [{ id: 5, title: 'Task 5' }] },
+        { title: 'To Do', tasks: [] },
+        { title: 'In Progress', tasks: [] },
+        { title: 'Review', tasks: [] },
+        { title: 'Done', tasks: [] },
     ];
 
     const [cards, setCards] = useState(initialCards);
