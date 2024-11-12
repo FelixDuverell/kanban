@@ -4,7 +4,82 @@
   --header: #00d8bf;
 }
 
+/* page.tsx */
+
+/* src/app/page.module.css */
+
 .page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.formContainer {
+  width: 300px;
+  height: 300px;
+  background-color: var(--header);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.tabContainer {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 20px;
+}
+
+.tab {
+  padding: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: #000;
+  
+}
+
+.activeTab {
+  border-bottom: 2px solid #000000;
+  font-weight: bold;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+}
+
+.input {
+  margin: 10px 0;
+  padding: 8px;
+  font-size: 16px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.btn {
+  padding: 10px 15px;
+  font-size: 16px;
+  cursor: pointer;
+  background-color: #0070f3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  margin-top: 10px;
+}
+
+.error {
+  color: red;
+  margin-bottom: 10px;
+}
+
+/*  */
+
+
+.layout {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -33,6 +108,7 @@
 .card {
   background-color: white;
   border: 1px solid #ddd;
+  width: 300px;
   border-radius: 8px;
   padding: 16px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -75,14 +151,67 @@
   padding: 5px 10px;
   border-radius: 4px;
   border: none;
-  background-color: #00796b;
+  background-color: #00d8bf;
   color: white;
   cursor: pointer;
 }
 
 .btn:hover {
-  background-color: #004d40;
+  background-color: #00796b;
 }
+
+/* Add task btn */
+.kanbanContainer {
+  display: flex;
+  justify-content: flex-start; /* Gör så att alla boxar ligger på rad */
+  gap: 20px; /* Mellanrum mellan varje box */
+}
+
+.addTaskBox {
+  margin: 15px;
+  padding: 15px;
+  border: 1px dashed #ddd;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.addTaskText {
+  font-size: 1.2em;
+  color: #06e4ca;
+}
+
+.addTaskForm {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Färg för lådorna */
+.todoCard {
+  background-color: #ff7474; 
+  /* background-color: #9db3ad;*/
+}
+
+.inProgressCard {
+  background-color: #68bbff; 
+}
+.reviewCard {
+  background-color: #ffb35d; 
+}
+
+.doneCard {
+  background-color: #6eff6e; 
+}
+
+.cardHovered {
+  opacity: 0.8;
+}
+
+
 
 @media (max-width: 768px) {
   .kanbanContainer {

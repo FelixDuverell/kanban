@@ -1,122 +1,137 @@
 // src/app/page.tsx
 
 "use client";
-// src/app/components/KanbanCards.tsx
 
 import React, { useState } from 'react';
+import KanbanBoard from './Components/KanbanBoard';
 import styles from './page.module.css';
 
-interface Task {
-    id: number;
-    title: string;
-}
+export default function Page() {
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [isLoginTab, setIsLoginTab] = useState(true);
 
-interface Card {
-    title: string;
-    tasks: Task[];
-}
+    // State för Login
+    const [loginEmail, setLoginEmail] = useState('');
+    const [loginPassword, setLoginPassword] = useState('');
 
-export default function KanbanCards() {
-    const initialCards: Card[] = [
-        { title: 'To Do', tasks: [] },
-        { title: 'In Progress', tasks: [] },
-        { title: 'Review', tasks: [] },
-        { title: 'Done', tasks: [] },
-    ];
+    // State för Signup
+    const [signupEmail, setSignupEmail] = useState('');
+    const [signupUsername, setSignupUsername] = useState('');
+    const [signupPassword, setSignupPassword] = useState('');
 
-    const [cards, setCards] = useState(initialCards);
-    const [draggingTask, setDraggingTask] = useState<Task | null>(null);
-    const [draggingCardIndex, setDraggingCardIndex] = useState<number | null>(null);
-    const [newTaskTitles, setNewTaskTitles] = useState<string[]>(Array(cards.length).fill(''));
+    const [error, setError] = useState<string | null>(null);
 
-    const handleDragStart = (cardIndex: number, taskIndex: number) => {
-        setDraggingTask(cards[cardIndex].tasks[taskIndex]);
-        setDraggingCardIndex(cardIndex);
-    };
-
-    const handleDrop = (targetCardIndex: number) => {
-        if (draggingTask && draggingCardIndex !== null) {
-            const newCards = [...cards];
-            const sourceTasks = newCards[draggingCardIndex].tasks;
-            const targetTasks = newCards[targetCardIndex].tasks;
-
-            // Remove task from source
-            const updatedSourceTasks = sourceTasks.filter(task => task.id !== draggingTask.id);
-            newCards[draggingCardIndex].tasks = updatedSourceTasks;
-
-            // Add task to target
-            targetTasks.push(draggingTask);
-            newCards[targetCardIndex].tasks = targetTasks;
-
-            setCards(newCards);
-            setDraggingTask(null);
-            setDraggingCardIndex(null);
+    const handleLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const response = await fetch('http://localhost:5000/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: loginEmail, password: loginPassword })
+            });
+            if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem('token', data.token);
+                setIsLoggedIn(true);
+                setError(null);
+            } else {
+                const message = await response.text();
+                setError(message || 'Inloggning misslyckades');
+            }
+        } catch (error) {
+            console.error('Inloggningsfel:', error);
+            setError('Serverfel');
         }
     };
 
-    const handleInputChange = (cardIndex: number, value: string) => {
-        const updatedTitles = [...newTaskTitles];
-        updatedTitles[cardIndex] = value;
-        setNewTaskTitles(updatedTitles);
+    const handleSignup = async (e: React.FormEvent) => {
+        e.preventDefault();
+        // Lägg till logik för signup här (liknande som handleLogin)
     };
 
-    const handleAddTask = (cardIndex: number) => {
-        const newTaskTitle = newTaskTitles[cardIndex].trim();
-        if (newTaskTitle === '') return;
-
-        const newTask: Task = {
-            id: Date.now(), // Using timestamp as a unique ID
-            title: newTaskTitle,
-        };
-
-        const updatedCards = [...cards];
-        updatedCards[cardIndex].tasks.push(newTask);
-        setCards(updatedCards);
-        setNewTaskTitles((prev) => {
-            const newTitles = [...prev];
-            newTitles[cardIndex] = ''; // Clear input field
-            return newTitles;
-        });
+    // Funktion för att hoppa över inloggningen
+    const skipLogin = () => {
+        setIsLoggedIn(true);
     };
+
+    if (isLoggedIn) {
+        return <KanbanBoard />;
+    }
 
     return (
         <div className={styles.page}>
             <h1 className={styles.header}>Kanban Board</h1>
-            <div className={styles.kanbanContainer}>
-                {cards.map((card, cardIndex) => (
-                    <div
-                        className={styles.card}
-                        key={cardIndex}
-                        onDragOver={(e) => e.preventDefault()} // Allow drop
-                        onDrop={() => handleDrop(cardIndex)} // Handle drop
+            <div className={styles.formContainer}>
+                <div className={styles.tabContainer}>
+                    <button
+                        className={`${styles.tab} ${isLoginTab ? styles.activeTab : ''}`}
+                        onClick={() => setIsLoginTab(true)}
                     >
-                        <h3 className={styles.cardTitle}>{card.title}</h3>
-                        <div className={styles.taskList}>
-                            {card.tasks.map((task, taskIndex) => (
-                                <div
-                                    key={task.id}
-                                    className={styles.task}
-                                    draggable
-                                    onDragStart={() => handleDragStart(cardIndex, taskIndex)}
-                                >
-                                    {task.title}
-                                </div>
-                            ))}
-                        </div>
-                        <input
-                            type="text"
-                            value={newTaskTitles[cardIndex]}
-                            onChange={(e) => handleInputChange(cardIndex, e.target.value)}
-                            className={styles.input}
-                            placeholder="New Task"
-                        />
-                        <button className={styles.btn} onClick={() => handleAddTask(cardIndex)}>
-                            Add Task
-                        </button>
-                    </div>
-                ))}
+                        Login
+                    </button>
+                    <button
+                        className={`${styles.tab} ${!isLoginTab ? styles.activeTab : ''}`}
+                        onClick={() => setIsLoginTab(false)}
+                    >
+                        Signup
+                    </button>
+                </div>
+                <form onSubmit={isLoginTab ? handleLogin : handleSignup} className={styles.form}>
+                    {error && <p className={styles.error}>{error}</p>}
+                    {isLoginTab ? (
+                        <>
+                            <input
+                                type="email"
+                                placeholder="Email"
+                                value={loginEmail}
+                                onChange={(e) => setLoginEmail(e.target.value)}
+                                className={styles.input}
+                            />
+                            <input
+                                type="password"
+                                placeholder="Lösenord"
+                                value={loginPassword}
+                                onChange={(e) => setLoginPassword(e.target.value)}
+                                className={styles.input}
+                            />
+                            <button type="submit" className={styles.btn}>
+                                Logga in
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <input
+                                type="email"
+                                placeholder="Email"
+                                value={signupEmail}
+                                onChange={(e) => setSignupEmail(e.target.value)}
+                                className={styles.input}
+                            />
+                            <input
+                                type="text"
+                                placeholder="Användarnamn"
+                                value={signupUsername}
+                                onChange={(e) => setSignupUsername(e.target.value)}
+                                className={styles.input}
+                            />
+                            <input
+                                type="password"
+                                placeholder="Lösenord"
+                                value={signupPassword}
+                                onChange={(e) => setSignupPassword(e.target.value)}
+                                className={styles.input}
+                            />
+                            <button type="submit" className={styles.btn}>
+                                Registrera
+                            </button>
+                        </>
+                    )}
+                </form>
+                {/* Ny knapp för att hoppa över inloggning */}
+                <button onClick={skipLogin} className={styles.skipBtn}>
+                    Fortsätt utan att logga in
+                </button>
             </div>
         </div>
     );
 }
-
