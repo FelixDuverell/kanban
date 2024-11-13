@@ -1,5 +1,3 @@
-// src/app/page.tsx
-
 "use client";
 
 import React, { useState } from 'react';
@@ -24,14 +22,15 @@ export default function Page() {
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const response = await fetch('http://localhost:5000/api/auth/login', {
+            const response = await fetch('http://localhost:5285/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: loginEmail, password: loginPassword })
+                body: JSON.stringify({ username: loginEmail, password: loginPassword }),
+                // credentials: 'include',
             });
             if (response.ok) {
-                const data = await response.json();
-                localStorage.setItem('token', data.token);
+                // const data = await response.json();
+                // localStorage.setItem('token', data.token);
                 setIsLoggedIn(true);
                 setError(null);
             } else {
@@ -46,7 +45,29 @@ export default function Page() {
 
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Lägg till logik för signup här (liknande som handleLogin)
+        try {
+            const response = await fetch('http://localhost:5285/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    email: signupEmail, 
+                    username: signupUsername, 
+                    password: signupPassword 
+                })
+            });
+            if (response.ok) {
+                // const data = await response.json();
+                // localStorage.setItem('token', data.token);
+                setIsLoggedIn(true);
+                setError(null);
+            } else {
+                const message = await response.text();
+                setError(message || 'Registrering misslyckades');
+            }
+        } catch (error) {
+            console.error('Registreringsfel:', error);
+            setError('Serverfel');
+        }
     };
 
     // Funktion för att hoppa över inloggningen
