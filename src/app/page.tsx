@@ -5,10 +5,10 @@ import KanbanBoard from './Components/KanbanBoard';
 import styles from './page.module.css';
 
 export default function Page() {
+     // State för Login
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [isLoginTab, setIsLoginTab] = useState(true);
 
-    // State för Login
     const [loginEmail, setLoginEmail] = useState('');
     const [loginPassword, setLoginPassword] = useState('');
 
@@ -29,8 +29,6 @@ export default function Page() {
                 // credentials: 'include',
             });
             if (response.ok) {
-                // const data = await response.json();
-                // localStorage.setItem('token', data.token);
                 setIsLoggedIn(true);
                 setError(null);
             } else {
@@ -56,8 +54,6 @@ export default function Page() {
                 })
             });
             if (response.ok) {
-                // const data = await response.json();
-                // localStorage.setItem('token', data.token);
                 setIsLoggedIn(true);
                 setError(null);
             } else {
@@ -68,11 +64,6 @@ export default function Page() {
             console.error('Registreringsfel:', error);
             setError('Serverfel');
         }
-    };
-
-    // Funktion för att hoppa över inloggningen
-    const skipLogin = () => {
-        setIsLoggedIn(true);
     };
 
     if (isLoggedIn) {
@@ -148,10 +139,6 @@ export default function Page() {
                         </>
                     )}
                 </form>
-                {/* Ny knapp för att hoppa över inloggning */}
-                <button onClick={skipLogin} className={styles.skipBtn}>
-                    Fortsätt utan att logga in
-                </button>
             </div>
         </div>
     );

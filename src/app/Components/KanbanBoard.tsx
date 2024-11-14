@@ -26,6 +26,7 @@ export default function KanbanCards() {
     const [newTaskTitle, setNewTaskTitle] = useState('');
     const [isAddTaskVisible, setIsAddTaskVisible] = useState(false);
     const [hoveredCardIndex, setHoveredCardIndex] = useState<number | null>(null);
+    const [user, setUser] = useState<any>(null); // För att lagra användardata
 
     const addTaskBoxRef = useRef<HTMLDivElement>(null);
 
@@ -42,6 +43,28 @@ export default function KanbanCards() {
         };
     }, []);
 
+    // Hämta användardata från backend whoami
+    useEffect(() => {
+        const fetchUser = async () => {
+            try {
+                const response = await fetch('http://localhost:5285/api/auth/whoami', {
+                    method: 'GET',
+                    credentials: 'include',
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    setUser(data); // Uppdatera användardatan
+                } else {
+                    setUser(null);
+                }
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+            }
+        };
+
+        fetchUser();
+    }, []);
+
     const handleDragStart = (cardIndex: number, taskIndex: number) => {
         setDraggingTask(cards[cardIndex].tasks[taskIndex]);
         setDraggingCardIndex(cardIndex);
@@ -52,17 +75,24 @@ export default function KanbanCards() {
             const newCards = [...cards];
             const sourceTasks = newCards[draggingCardIndex].tasks;
             const targetTasks = newCards[targetCardIndex].tasks;
-
-            const updatedSourceTasks = sourceTasks.filter(task => task.id !== draggingTask.id);
-            newCards[draggingCardIndex].tasks = updatedSourceTasks;
-
-            targetTasks.push(draggingTask);
-            newCards[targetCardIndex].tasks = targetTasks;
-
-            setCards(newCards);
+    
+            const taskExistsInTarget = targetTasks.some(task => task.id === draggingTask.id);
+    
+            if (!taskExistsInTarget) {
+                const updatedSourceTasks = sourceTasks.filter(task => task.id !== draggingTask.id);
+                newCards[draggingCardIndex].tasks = updatedSourceTasks;
+    
+                targetTasks.push(draggingTask);
+                newCards[targetCardIndex].tasks = targetTasks;
+    
+                setCards(newCards);
+            } else {
+                console.log('Task already exists in the target card!');
+            }
+    
             setDraggingTask(null);
             setDraggingCardIndex(null);
-            setHoveredCardIndex(null); // Återställ när drop sker
+            setHoveredCardIndex(null); 
         }
     };
 
@@ -100,26 +130,75 @@ export default function KanbanCards() {
         });
     };
 
-    const handleAddTaskToTodo = () => {
+    const saveCardsToLocalStorage = (updatedCards: Card[]) => {
+        localStorage.setItem('kanbanCards', JSON.stringify(updatedCards));
+    };
+    
+
+    const handleAddTaskToTodo = async () => {
         if (newTaskTitle.trim() === '') return;
 
-        const newTask: Task = {
-            id: Date.now(),
-            title: newTaskTitle,
-        };
+        if (user) {
+            const newTask = {
+                title: newTaskTitle,
+                userId: user.id,  // Skicka med användarens ID
+            };
 
-        const updatedCards = [...cards];
-        updatedCards[0].tasks.push(newTask);
-        setCards(updatedCards);
-        setNewTaskTitle('');
-        setIsAddTaskVisible(false); // Stänger formuläret när uppgiften har lagts till
+            try {
+                const response = await fetch('http://localhost:5285/api/kanbanposts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(newTask),
+                    credentials: 'include', 
+                });
+
+                if (response.ok) {
+                    const taskData = await response.json();
+                    const updatedCards = [...cards];
+                    updatedCards[0].tasks.push(taskData); 
+                    setCards(updatedCards);
+                    saveCardsToLocalStorage(updatedCards);  
+                    setNewTaskTitle('');
+                    setIsAddTaskVisible(false); 
+                } else {
+                    console.error('Failed to create task');
+                }
+            } catch (error) {
+                console.error('Error adding task:', error);
+            }
+        }
     };
+
+    useEffect(() => {
+        const storedCards = localStorage.getItem('kanbanCards');
+        if (storedCards) {
+            setCards(JSON.parse(storedCards));  // Återställ  med sparade data
+        }
+    }, []);
 
     const handleKeyDown = (event: React.KeyboardEvent) => {
         if (event.key === 'Enter') {
-            handleAddTaskToTodo(); // Lägger till uppgiften om Enter trycks
+            handleAddTaskToTodo(); 
         }
     };
+
+    const handleDeleteTask = () => {
+        if (draggingTask && draggingCardIndex !== null) {
+            const newCards = [...cards];
+            const sourceTasks = newCards[draggingCardIndex].tasks;
+    
+            const updatedSourceTasks = sourceTasks.filter(task => task.id !== draggingTask.id);
+            newCards[draggingCardIndex].tasks = updatedSourceTasks;
+    
+            setCards(newCards);
+            setDraggingTask(null);
+            setDraggingCardIndex(null);
+            setHoveredCardIndex(null);
+        }
+    };
+    
 
     const getCardClass = (index: number) => {
         switch (index) {
@@ -139,6 +218,7 @@ export default function KanbanCards() {
     return (
         <div className={styles.page}>
             <h1 className={styles.header}>Kanban Board</h1>
+            {user && <p>Welcome, {user.username}!</p>} {/* Visa användarnamn om användaren är inloggad */}
             <div className={styles.kanbanContainer}>
                 <div
                     className={styles.addTaskBox}
@@ -151,7 +231,7 @@ export default function KanbanCards() {
                                 type="text"
                                 value={newTaskTitle}
                                 onChange={(e) => setNewTaskTitle(e.target.value)}
-                                onKeyDown={handleKeyDown} // Lägg till keydown event för Enter
+                                onKeyDown={handleKeyDown} 
                                 className={styles.input}
                                 placeholder="New Task"
                             />
@@ -187,6 +267,12 @@ export default function KanbanCards() {
                         </div>
                     </div>
                 ))}
+                <div 
+                className={styles.deleteZone} 
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={handleDeleteTask}>
+                <span className={styles.deleteText}>🗑️</span>
+            </div>
             </div>
         </div>
     );
